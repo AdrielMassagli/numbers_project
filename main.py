@@ -35,7 +35,7 @@ if not creds or not creds.valid:
       creds.refresh(Request())
   else:
     flow = InstalledAppFlow.from_client_secrets_file(
-        'Documents\Numbers_project\credentials.json', SCOPES
+        'Documents\project_numbers\credentials.json', SCOPES
     )
     creds = flow.run_local_server(port=0)
     # Salva as credenciais e executa
@@ -46,11 +46,11 @@ with open("token.json", "w") as token:
     sheet = service.spreadsheets()
 
 #Querys
-with open('Documents\Numbers_project\querys\query_cro.sql', 'r') as file:
-        query_tpv = file.read()
+# with open('Documents\project_numbers\querys\query_cro.sql', 'r') as file:
+#         query_tpv = file.read()
 
-with open('Documents\Numbers_project\querys\query_tpv.sql', 'r') as file:
-        query_cro = file.read()        
+# with open('Documents\project_numbers\querys\query_tpv.sql', 'r') as file:
+#         query_cro = file.read()        
 
 
 def func_teste():
