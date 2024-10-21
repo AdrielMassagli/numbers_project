@@ -47,7 +47,7 @@ with open("token.json", "w") as token:
     service = build("sheets", "v4", credentials=creds) #Cria uma instância da conexão
     sheet = service.spreadsheets()
     
-date = "2024-10-10"
+date = "2024-10-11"
 date_2 = "2024-10-12"
 
 def clear_all():
@@ -60,7 +60,17 @@ def clear_all():
       spreadsheetId=SAMPLE_SPREADSHEET_ID, 
       range='db_new_merchants!A2:E'
     ).execute()
-#clear_all()
+
+    sheet.values().clear(
+      spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+      range='Análise Overall!B4:C11'
+    ).execute()
+
+    sheet.values().clear(
+      spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+      range='Análise Overall!F4:G11'
+    ).execute()
+clear_all()
 
 # def input_tpv():
 #     with open(".\querys\query_tpv.sql", "r") as file:
@@ -107,7 +117,36 @@ def clear_all():
 #    print(input_datas)
 # # input_cro()
 
-def fluctuation_cro_method():
+#definindo o dia da semana de acordo com a data
+data = datetime.datetime.strptime(date, '%Y-%m-%d')
+num_week = data.strftime('%U')
+num_week = int(num_week)+1
+
+search_caa = "W:week:/2024" #padrão de pesquisa caa
+search_caa = search_caa.replace(":week:", str(num_week))
+
+search_real = "W:week:" #padrão de pesquisa real
+search_real = search_real.replace(":week:", str(num_week))
+
+print(num_week)
+print(date)
+
+#inputa a semana na planilha
+sheet.values().update(
+          spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+          range='Análise Overall!A3', 
+          valueInputOption="USER_ENTERED",
+          body={'majorDimension': 'ROWS','values': [[search_caa]]}
+).execute() 
+sheet.values().update(
+          spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+          range='Análise Overall!E3', 
+          valueInputOption="USER_ENTERED",
+          body={'majorDimension': 'ROWS','values': [[search_caa]]}
+).execute() 
+
+#Função que calcula a variação de CRO esperada do caa
+def fluctuation_cro_caa_method():
    #puxando os dados de CAA da planilha
     result = (
           sheet.values()
@@ -116,78 +155,62 @@ def fluctuation_cro_method():
               majorDimension='ROWS')
           .execute()
       )
-    #definindo o dia da semana de acordo com a data
-    data = datetime.datetime.strptime(date, '%Y-%m-%d')
-    num_week = data.strftime('%U')
-    num_week = int(num_week)+1
-    search = "W:week:/2024" #padrão de pesquisa
-    search = search.replace(":week:", str(num_week))
-    print(search)
 
     #looping que passa em todos os registros da tabela e encontra o valor de cada canal na semana
     i = 0
     while i < len(result['values'][0]):
-        if result['values'][0][i] == search:
-          #CAA
+        if result['values'][0][i] == search_caa:
+          #CRO CAA
           actual_week_caa = float(result['values'][1][i])
           last_week_caa = float(result['values'][1][i-1])
           percent_caa = ((actual_week_caa-last_week_caa)/last_week_caa)*100
 
-          #Executives
+          #CRO Executives CAA
           actual_week_executives = float(result['values'][2][i])
           last_week_executives = float(result['values'][2][i-1])
           percent_executives = ((actual_week_executives-last_week_executives)/last_week_executives)*100
 
-          #OM
+          #CRO OM CAA
           actual_week_om = float(result['values'][3][i])
           last_week_om = float(result['values'][3][i-1])
           percent_om = ((actual_week_om-last_week_om)/last_week_om)*100
 
-          #Consultants
+          #CRO Consultants CAA
           actual_week_consultants = float(result['values'][4][i])
           last_week_consultants = float(result['values'][4][i-1])
           percent_consultants = ((actual_week_consultants-last_week_consultants)/last_week_consultants)*100
 
-          #RaF
+          #CRO RaF CAA
           actual_week_raf = float(result['values'][5][i])
           last_week_raf = float(result['values'][5][i-1])
           percent_raf = ((actual_week_raf-last_week_raf)/last_week_raf)*100
 
-          #Integradores
+          #CRO Integradores CAA
           actual_week_integra = float(result['values'][6][i])
           last_week_integra = float(result['values'][6][i-1])
           percent_integra = ((actual_week_integra-last_week_integra)/last_week_integra)*100
 
-          #Second hand
+          #CRO Second hand CAA
           actual_week_second = float(result['values'][7][i])
           last_week_second = float(result['values'][7][i-1])
           percent_second = ((actual_week_second-last_week_second)/last_week_second)*100
 
-          input_result = [[round(percent_executives, 1)], [round(percent_om,1)], [round(percent_consultants,1)], [round(percent_raf,1)], [round(percent_second,1)], [round(percent_integra,1)], [0], [round(percent_caa,1)] ]
+          input_result = [[round(percent_executives, 1)], [round(percent_om,1)], [round(percent_consultants,1)], [round(percent_raf,1)], [round(percent_second,1)], [round(percent_integra,1)], ['-'], [round(percent_caa,1)] ]
 
-          print(input_result)
-          print("Deu certo")
+          sheet.values().update(
+            spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+            range='Análise Overall!B4', 
+            valueInputOption="USER_ENTERED",
+            body={'majorDimension': 'ROWS','values': input_result}
+          ).execute()
           i += 1
         else:
           i += 1 
+fluctuation_cro_caa_method()
 
-    sheet.values().update(
-          spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-          range='Análise Overall!B4', 
-          valueInputOption="USER_ENTERED",
-          body={'majorDimension': 'ROWS','values': input_result}
-      ).execute()
-    
-    sheet.values().update(
-          spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-          range='Análise Overall!A3', 
-          valueInputOption="USER_ENTERED",
-          body={'majorDimension': 'ROWS','values': [[search]]}
-      ).execute()
-
-      #---------------------------------------------------------
-
-    result_real = (
+#Função que calcula a variação de CRO real
+def fluctuation_cro_real_method():
+  result_real = (
           sheet.values()
           .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, 
               range='Slides Nova Atrib!B81:O91',
@@ -195,71 +218,246 @@ def fluctuation_cro_method():
           .execute()
       )
 
-
-    search_2 = "W:week_2:"
-    search_2 = search_2.replace(":week_2:", str(num_week))
-    x=0
-    print(search_2)
-
-    try:
-      while x < len(result_real['values'][0]):
-        if result_real['values'][0][x] == search_2:
-          #REAL
-          actual_week_real = float(result_real['values'][8][x])
+  x=0
+  try:
+    while x < len(result_real['values'][0]):
+      if result_real['values'][0][x] == search_real:
+        #CRO REAL
+        actual_week_real = float(result_real['values'][8][x])
+        if str(result_real['values'][8][x-1]).isnumeric():
           last_week_real = float(result_real['values'][8][x-1])
           percent_real = ((actual_week_real-last_week_real)/last_week_real)*100
+        else:
+          percent_real = 0
 
-          #Executives
-          actual_week_real_executives = float(result_real['values'][1][x])
+        #CRO Executives REAL
+        actual_week_real_executives = float(result_real['values'][1][x])
+        if str(result_real['values'][1][x-1]).isnumeric():
           last_week_real_executives = float(result_real['values'][1][x-1])
           percent_real_executives = ((actual_week_real_executives-last_week_real_executives)/last_week_real_executives)*100
+        else:
+          percent_real_executives = 0
+        
 
-          #OM
-          actual_week_real_om = float(result_real['values'][2][x])
+        #CRO OM REAL
+        actual_week_real_om = float(result_real['values'][2][x])
+        if str(result_real['values'][2][x-1]).isnumeric():
           last_week_real_om = float(result_real['values'][2][x-1])
           percent_real_om = ((actual_week_real_om-last_week_real_om)/last_week_real_om)*100
+        else: 
+          percent_real_om = 0
 
-          #Consultants
-          actual_week_real_cons = float(result_real['values'][3][x])
+        #CRO Consultants REAL
+        actual_week_real_cons = float(result_real['values'][3][x])
+        if str(result_real['values'][3][x-1]).isnumeric():
           last_week_real_cons = float(result_real['values'][3][x-1])
           percent_real_cons = ((actual_week_real_cons-last_week_real_cons)/last_week_real_cons)*100
+        else:
+          percent_real_cons = 0
 
-          #RaF
-          actual_week_real_raf = float(result_real['values'][4][x])
+        #CRO RaF REAL
+        actual_week_real_raf = float(result_real['values'][4][x])
+        if str(result_real['values'][4][x-1]).isnumeric():
           last_week_real_raf = float(result_real['values'][4][x-1])
           percent_real_raf = ((actual_week_real_raf-last_week_real_raf)/last_week_real_raf)*100
+        else:
+          percent_real_raf = 0 
 
-          #Integradores
-          actual_week_real_integra = float(result_real['values'][5][x])
+        #CRO Integradores REAL
+        actual_week_real_integra = float(result_real['values'][5][x])
+        if str(result_real['values'][5][x-1]).isnumeric():
           last_week_real_integra = float(result_real['values'][5][x-1])
           percent_real_integra = ((actual_week_real_integra-last_week_real_integra)/last_week_real_integra)*100
+        else:
+          percent_real_integra = 0
 
-          #Second Hand
-          actual_week_real_second = float(result_real['values'][6][x])
+        #CRO Second Hand REAL
+        actual_week_real_second = float(result_real['values'][6][x])
+        if str(result_real['values'][6][x-1]).isnumeric():
           last_week_real_second = float(result_real['values'][6][x-1])
           percent_real_second = ((actual_week_real_second-last_week_real_second)/last_week_real_second)*100
+        else:
+          percent_real_second = 0 
 
-          #Others
-          actual_week_real_others = float(result_real['values'][1][x])
+        #CRO Others REAL
+        actual_week_real_others = float(result_real['values'][1][x])
+        if str(result_real['values'][1][x-1]).isnumeric():
           last_week_real_others = float(result_real['values'][1][x-1])
           percent_real_others = ((actual_week_real_others-last_week_real_others)/last_week_real_others)*100
-
-          input_result_2 = [[round(percent_real_executives, 1)], [round(percent_real_om, 1)], [round(percent_real_cons,1)], [round(percent_real_raf,1)], [round(percent_real_second,1)], [round(percent_real_integra,1)], [round(percent_real_others,1)], [round(percent_real,1)]]
-
-          sheet.values().update(
-            spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-            range='Análise Overall!C4', 
-            valueInputOption="USER_ENTERED",
-            body={'majorDimension': 'ROWS','values': input_result_2}
-          ).execute()
-
-          print(input_result_2)
-          x += 1
         else:
-          x += 1
-    except IndexError:
+          percent_real_others = 0 
+
+        input_result_2 = [[round(percent_real_executives, 1)], [round(percent_real_om, 1)], [round(percent_real_cons,1)], [round(percent_real_raf,1)], [round(percent_real_second,1)], [round(percent_real_integra,1)], [round(percent_real_others,1)], [round(percent_real,1)]]
+
+        sheet.values().update(
+          spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+          range='Análise Overall!C4', 
+          valueInputOption="USER_ENTERED",
+          body={'majorDimension': 'ROWS','values': input_result_2}
+        ).execute()
+
+        print(input_result_2)
+        x += 1
+      else:
+        x += 1
+  except IndexError:
       print("Data inválida")
-fluctuation_cro_method()
+fluctuation_cro_real_method()
 
+#Função que calcula a variação do TPV ADD do caa
+def fluctuation_tpv_caa_method():
+  result = (
+    sheet.values()
+    .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+        range='forecast_caa!A29:DA36',
+        majorDimension='ROWS')
+    .execute()
+  )
 
-#def fluctuation_tpv_method():
+  i = 0
+  while i < len(result['values'][0]):
+    if result['values'][0][i] == search_caa:
+      #TPV CAA
+      actual_week_caa = float(result['values'][1][i])
+      last_week_caa = float(result['values'][1][i-1])
+      percent_caa = ((actual_week_caa - last_week_caa)/last_week_caa)*100
+
+      #TPV Executives CAA
+      actual_week_caa_executives = float(result['values'][2][i])
+      last_week_caa_executives = float(result['values'][2][i-1])
+      percent_caa_executives = ((actual_week_caa_executives - last_week_caa_executives)/last_week_caa_executives)*100
+
+      #TPV OM CAA
+      actual_week_caa_om = float(result['values'][3][i])
+      last_week_caa_om = float(result['values'][3][i-1])
+      percent_caa_om = ((actual_week_caa_om - last_week_caa_om)/last_week_caa_om)*100
+
+      #TPV Consultants CAA
+      actual_week_caa_consultants = float(result['values'][4][i])
+      last_week_caa_consultants = float(result['values'][4][i-1])
+      percent_caa_consultants = ((actual_week_caa_consultants - last_week_caa_consultants)/last_week_caa_consultants)*100
+
+      #TPV RaF CAA
+      actual_week_caa_raf = float(result['values'][5][i])
+      last_week_caa_raf = float(result['values'][5][i-1])
+      percent_caa_raf = ((actual_week_caa_raf - last_week_caa_raf)/last_week_caa_raf)*100
+
+      #TPV Integradores CAA
+      actual_week_caa_integra = float(result['values'][6][i])
+      last_week_caa_integra = float(result['values'][6][i-1])
+      percent_caa_integra = ((actual_week_caa_integra - last_week_caa_integra)/last_week_caa_integra)*100
+
+      #TPV Second Hand CAA
+      actual_week_caa_second = float(result['values'][7][i])
+      last_week_caa_second = float(result['values'][7][i-1])
+      percent_caa_second = ((actual_week_caa_second - last_week_caa_second)/last_week_caa_second)*100
+
+      input_result = [[round(percent_caa_executives,1)], [round(percent_caa_om,1)], [round(percent_caa_consultants,1)], [round(percent_caa_raf,1)], [round(percent_caa_second,1)], [round(percent_caa_integra)], ['-'], [round(percent_caa,1)]]
+
+      sheet.values().update(
+            spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+            range='Análise Overall!F4', 
+            valueInputOption="USER_ENTERED",
+            body={'majorDimension': 'ROWS','values': input_result}
+      ).execute()
+
+      i += 1
+    else:
+      i += 1
+fluctuation_tpv_caa_method()
+
+#Função que calcula a variação do TPV ADD real
+def fluctuation_tpv_real_method():
+  result_real = (
+          sheet.values()
+          .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+              range='TPV ADD!A3:DA12',
+              majorDimension='ROWS')
+          .execute()
+  )
+  i = 0
+  print(result_real)
+  print(search_caa)
+  #try:
+  while i < len(result_real['values'][0]):
+      if result_real['values'][0][i] == search_caa:
+        #TPV Real
+        actual_week_real = float(result_real['values'][2][i])
+        if str(result_real['values'][2][i-1]).isnumeric():
+          last_week_real = float(result_real['values'][2][i-1])
+          percent_real = ((actual_week_real - last_week_real)/last_week_real)*100
+        else: 
+          percent_real = 0
+          
+        #TPV Executives Real
+        actual_week_real_executives = float(result_real['values'][4][i])
+        if str(result_real['values'][4][i-1]).isnumeric():
+          last_week_real_executives = float(result_real['values'][4][i-1])
+          percent_real_executives = ((actual_week_real_executives - last_week_real_executives)/last_week_real_executives)*100
+        else:
+          percent_real_executives = 0
+
+        #TPV OM Real
+        actual_week_real_om = float(result_real['values'][5][i])
+        if str(result_real['values'][5][i-1]).isnumeric():
+          last_week_real_om = float(result_real['values'][5][i-1])
+          percent_real_om = ((actual_week_real_om - last_week_real_om)/last_week_real_om)*100
+        else:
+          percent_real_om = 0
+
+        #TPV Consultants Real
+        actual_week_real_consultants = float(result_real['values'][3][i])
+        if str(result_real['values'][3][i-1]).isnumeric():
+          last_week_real_consultants = float(result_real['values'][3][i-1])
+          percent_real_consultants = ((actual_week_real_consultants - last_week_real_consultants)/last_week_real_consultants)*100
+        else: 
+          percent_real_consultants = 0
+
+        #TPV RaF Real
+        actual_week_real_raf = float(result_real['values'][6][i])
+        if str(result_real['values'][6][i-1]).isnumeric():
+          last_week_real_raf = float(result_real['values'][6][i-1])
+          percent_real_raf = ((actual_week_real_raf - last_week_real_raf)/last_week_real_raf)*100
+        else:
+          percent_real_raf = 0 
+
+        #TPV Second Hand Real
+        actual_week_real_second = float(result_real['values'][8][i])
+        if str(result_real['values'][8][i-1]).isnumeric():
+          last_week_real_second = float(result_real['values'][8][i-1])
+          percent_real_second = ((actual_week_real_second - last_week_real_second)/last_week_real_second)*100
+        else:
+          percent_real_second = 0 
+
+        #TPV Integradores Real
+        actual_week_real_integra = float(result_real['values'][9][i])
+        if str(result_real['values'][9][i-1]).isnumeric():
+          last_week_real_integra = float(result_real['values'][9][i-1])
+          percent_real_integra = ((actual_week_real_integra - last_week_real_integra)/last_week_real_integra)*100
+        else:
+          percent_real_integra = 0
+
+        #TPV Others Real
+        actual_week_real_others = float(result_real['values'][7][i])
+        if str(result_real['values'][7][i-1]).isnumeric():
+          last_week_real_others = float(result_real['values'][7][i-1])
+          percent_real_others = ((actual_week_real_others - last_week_real_others)/last_week_real_others)*100
+        else:
+          percent_real_others = 0
+
+        input_result = [[str(round(percent_real_executives,1))+"%"], [str(round(percent_real_om,1))+"%"], [round(percent_real_consultants,1)], [round(percent_real_raf,1)], [round(percent_real_second)], [round(percent_real_integra)], [round(percent_real_others)], [round(percent_real)]]
+
+        sheet.values().update(
+              spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+              range='Análise Overall!G4', 
+              valueInputOption="USER_ENTERED",
+              body={'majorDimension': 'ROWS','values': input_result}
+        ).execute()
+        print('deu certo')
+        i += 1
+      else:
+        i += 1
+  # except IndexError:
+  #   print("Data inválida")
+fluctuation_tpv_real_method()
+
