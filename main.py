@@ -47,7 +47,7 @@ with open("token.json", "w") as token:
     service = build("sheets", "v4", credentials=creds) #Cria uma instância da conexão
     sheet = service.spreadsheets()
     
-date = "2024-10-19"
+date = "2024-10-12"
 date_2 = "2024-10-12"
 
 def clear_all():
@@ -91,7 +91,20 @@ def clear_all():
       range='Análise Overall!G17:I24'
     ).execute()
 
+    sheet.values().clear(
+      spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+      range='Análise Overall!B30:D37'
+    ).execute()
 
+    sheet.values().clear(
+      spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+      range='Análise Overall!G30:I37'
+    ).execute()
+    
+    sheet.values().clear(
+      spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+      range='Análise Overall!L30:N37'
+    ).execute()
 clear_all()
 
 # def input_tpv():
@@ -114,7 +127,7 @@ clear_all()
 #         valueInputOption="USER_ENTERED",
 #         body={'majorDimension': 'COLUMNS','values': input_datas}
 #     ).execute()
-# # input_tpv()
+# input_tpv()
 
 # def input_cro():
 #    with open(".\querys\query_cro.sql", "r") as file:
@@ -137,7 +150,7 @@ clear_all()
 #         body={'majorDimension': 'COLUMNS','values': input_datas}
 #     ).execute()
 #    print(input_datas)
-# # input_cro()
+# input_cro()
 
 #definindo o dia da semana de acordo com a data
 data = datetime.datetime.strptime(date, '%Y-%m-%d')
@@ -157,242 +170,261 @@ print(num_week)
 print(date)
 
 #inputa a semana na planilha
-sheet.values().update(
-          spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-          range='Análise Overall!A3', 
-          valueInputOption="USER_ENTERED",
-          body={'majorDimension': 'ROWS','values': [[search_caa]]}
-).execute() 
-sheet.values().update(
-          spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-          range='Análise Overall!E3', 
-          valueInputOption="USER_ENTERED",
-          body={'majorDimension': 'ROWS','values': [[search_caa]]}
-).execute() 
-sheet.values().update(
-          spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-          range='Análise Overall!I3', 
-          valueInputOption="USER_ENTERED",
-          body={'majorDimension': 'ROWS','values': [[search_caa]]}
-).execute() 
-sheet.values().update(
-          spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-          range='Análise Overall!B16', 
-          valueInputOption="USER_ENTERED",
-          body={'majorDimension': 'ROWS','values': [[input_last_week]]}
-).execute() 
-sheet.values().update(
-          spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-          range='Análise Overall!C16', 
-          valueInputOption="USER_ENTERED",
-          body={'majorDimension': 'ROWS','values': [[input_actual_week]]}
-).execute() 
-sheet.values().update(
-          spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-          range='Análise Overall!G16', 
-          valueInputOption="USER_ENTERED",
-          body={'majorDimension': 'ROWS','values': [[input_last_week]]}
-).execute() 
-sheet.values().update(
-          spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-          range='Análise Overall!H16', 
-          valueInputOption="USER_ENTERED",
-          body={'majorDimension': 'ROWS','values': [[input_actual_week]]}
-).execute() 
-
-
-#Função que calcula a variação de CRO esperada do caa
-def fluctuation_cro_caa_method():
-   #puxando os dados de CAA da planilha
-    result = (
-          sheet.values()
-          .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-              range='forecast_caa!A12:DA20',
-              majorDimension='ROWS')
-          .execute()
-      )
-
-    #looping que passa em todos os registros da tabela e encontra o valor de cada canal na semana
-    i = 0
-    while i < len(result['values'][0]):
-        if result['values'][0][i] == search_caa:
-          #CRO CAA
-          actual_week_caa = float(result['values'][1][i])
-          last_week_caa = float(result['values'][1][i-1])
-          percent_caa = ((actual_week_caa-last_week_caa)/last_week_caa)*100
-
-          #CRO Executives CAA
-          actual_week_executives = float(result['values'][2][i])
-          last_week_executives = float(result['values'][2][i-1])
-          percent_executives = ((actual_week_executives-last_week_executives)/last_week_executives)*100
-
-          #CRO OM CAA
-          actual_week_om = float(result['values'][3][i])
-          last_week_om = float(result['values'][3][i-1])
-          percent_om = ((actual_week_om-last_week_om)/last_week_om)*100
-
-          #CRO Consultants CAA
-          actual_week_consultants = float(result['values'][4][i])
-          last_week_consultants = float(result['values'][4][i-1])
-          percent_consultants = ((actual_week_consultants-last_week_consultants)/last_week_consultants)*100
-
-          #CRO RaF CAA
-          actual_week_raf = float(result['values'][5][i])
-          last_week_raf = float(result['values'][5][i-1])
-          percent_raf = ((actual_week_raf-last_week_raf)/last_week_raf)*100
-
-          #CRO Integradores CAA
-          actual_week_integra = float(result['values'][6][i])
-          last_week_integra = float(result['values'][6][i-1])
-          percent_integra = ((actual_week_integra-last_week_integra)/last_week_integra)*100
-
-          #CRO Second hand CAA
-          actual_week_second = float(result['values'][7][i])
-          last_week_second = float(result['values'][7][i-1])
-          percent_second = ((actual_week_second-last_week_second)/last_week_second)*100
-
-          input_result = [[str(round(percent_executives, 1))+"%"], [str(round(percent_om,1))+"%"], [str(round(percent_consultants,1))+"%"], [str(round(percent_raf,1))+"%"], [str(round(percent_second,1))+"%"], [str(round(percent_integra,1))+"%"], ['-'], [str(round(percent_caa,1))+"%"] ]
-
-          sheet.values().update(
+def input_week_method():
+  sheet.values().update(
             spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-            range='Análise Overall!B4', 
+            range='Análise Overall!A3', 
             valueInputOption="USER_ENTERED",
-            body={'majorDimension': 'ROWS','values': input_result}
-          ).execute()
-          i += 1
-        else:
-          i += 1 
-fluctuation_cro_caa_method()
+            body={'majorDimension': 'ROWS','values': [[search_caa]]}
+  ).execute() 
+  sheet.values().update(
+            spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+            range='Análise Overall!E3', 
+            valueInputOption="USER_ENTERED",
+            body={'majorDimension': 'ROWS','values': [[search_caa]]}
+  ).execute() 
+  sheet.values().update(
+            spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+            range='Análise Overall!I3', 
+            valueInputOption="USER_ENTERED",
+            body={'majorDimension': 'ROWS','values': [[search_caa]]}
+  ).execute() 
+  sheet.values().update(
+            spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+            range='Análise Overall!B16', 
+            valueInputOption="USER_ENTERED",
+            body={'majorDimension': 'ROWS','values': [[input_last_week]]}
+  ).execute() 
+  sheet.values().update(
+            spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+            range='Análise Overall!C16', 
+            valueInputOption="USER_ENTERED",
+            body={'majorDimension': 'ROWS','values': [[input_actual_week]]}
+  ).execute() 
+  sheet.values().update(
+            spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+            range='Análise Overall!G16', 
+            valueInputOption="USER_ENTERED",
+            body={'majorDimension': 'ROWS','values': [[input_last_week]]}
+  ).execute() 
+  sheet.values().update(
+            spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+            range='Análise Overall!H16', 
+            valueInputOption="USER_ENTERED",
+            body={'majorDimension': 'ROWS','values': [[input_actual_week]]}
+  ).execute() 
+  sheet.values().update(
+            spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+            range='Análise Overall!C29', 
+            valueInputOption="USER_ENTERED",
+            body={'majorDimension': 'ROWS','values': [[input_actual_week]]}
+  ).execute() 
+  sheet.values().update(
+            spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+            range='Análise Overall!H29', 
+            valueInputOption="USER_ENTERED",
+            body={'majorDimension': 'ROWS','values': [[input_actual_week]]}
+  ).execute()
+  sheet.values().update(
+            spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+            range='Análise Overall!M29', 
+            valueInputOption="USER_ENTERED",
+            body={'majorDimension': 'ROWS','values': [[input_actual_week]]}
+  ).execute()  
+input_week_method()
 
-#Função que calcula a variação de CRO real
-def fluctuation_cro_real_method():
-  result_real = (
-          sheet.values()
-          .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-              range='CRO!A4:DA12',
-              majorDimension='ROWS')
-          .execute()
-      )
+# #Função que calcula a variação de CRO esperada do caa
+# def fluctuation_cro_caa_method():
+#    #puxando os dados de CAA da planilha
+#     result = (
+#           sheet.values()
+#           .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#               range='forecast_caa!A12:DA20',
+#               majorDimension='ROWS')
+#           .execute()
+#       )
 
-  print(result_real)
+#     #looping que passa em todos os registros da tabela e encontra o valor de cada canal na semana
+#     i = 0
+#     while i < len(result['values'][0]):
+#         if result['values'][0][i] == search_caa:
+#           #CRO CAA
+#           actual_week_caa = float(result['values'][1][i])
+#           last_week_caa = float(result['values'][1][i-1])
+#           percent_caa = ((actual_week_caa-last_week_caa)/last_week_caa)*100
 
-  x=0
-  try:
-    while x < len(result_real['values'][0]):
-      if result_real['values'][0][x] == search_caa:
-        #CRO REAL
-        if str(result_real['values'][1][x]).isnumeric():
+#           #CRO Executives CAA
+#           actual_week_executives = float(result['values'][2][i])
+#           last_week_executives = float(result['values'][2][i-1])
+#           percent_executives = ((actual_week_executives-last_week_executives)/last_week_executives)*100
+
+#           #CRO OM CAA
+#           actual_week_om = float(result['values'][3][i])
+#           last_week_om = float(result['values'][3][i-1])
+#           percent_om = ((actual_week_om-last_week_om)/last_week_om)*100
+
+#           #CRO Consultants CAA
+#           actual_week_consultants = float(result['values'][4][i])
+#           last_week_consultants = float(result['values'][4][i-1])
+#           percent_consultants = ((actual_week_consultants-last_week_consultants)/last_week_consultants)*100
+
+#           #CRO RaF CAA
+#           actual_week_raf = float(result['values'][5][i])
+#           last_week_raf = float(result['values'][5][i-1])
+#           percent_raf = ((actual_week_raf-last_week_raf)/last_week_raf)*100
+
+#           #CRO Integradores CAA
+#           actual_week_integra = float(result['values'][6][i])
+#           last_week_integra = float(result['values'][6][i-1])
+#           percent_integra = ((actual_week_integra-last_week_integra)/last_week_integra)*100
+
+#           #CRO Second hand CAA
+#           actual_week_second = float(result['values'][7][i])
+#           last_week_second = float(result['values'][7][i-1])
+#           percent_second = ((actual_week_second-last_week_second)/last_week_second)*100
+
+#           input_result = [[str(round(percent_executives, 1))+"%"], [str(round(percent_om,1))+"%"], [str(round(percent_consultants,1))+"%"], [str(round(percent_raf,1))+"%"], [str(round(percent_second,1))+"%"], [str(round(percent_integra,1))+"%"], ['-'], [str(round(percent_caa,1))+"%"] ]
+
+#           sheet.values().update(
+#             spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#             range='Análise Overall!B4', 
+#             valueInputOption="USER_ENTERED",
+#             body={'majorDimension': 'ROWS','values': input_result}
+#           ).execute()
+#           i += 1
+#         else:
+#           i += 1 
+# fluctuation_cro_caa_method()
+
+# #Função que calcula a variação de CRO real
+# def fluctuation_cro_real_method():
+#   result_real = (
+#           sheet.values()
+#           .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#               range='CRO!A4:DA12',
+#               majorDimension='ROWS')
+#           .execute()
+#       )
+
+#   print(result_real)
+
+#   x=0
+#   try:
+#     while x < len(result_real['values'][0]):
+#       if result_real['values'][0][x] == search_caa:
+#         #CRO REAL
+#         if str(result_real['values'][1][x]).isnumeric():
           
-          if str(result_real['values'][1][x-1]).isnumeric():
-            actual_week_real = float(result_real['values'][1][x])
-            last_week_real = float(result_real['values'][1][x-1])
-            percent_real = ((actual_week_real-last_week_real)/last_week_real)*100
-          else:
-            percent_real = 0
-        else:
-            percent_real = 0
+#           if str(result_real['values'][1][x-1]).isnumeric():
+#             actual_week_real = float(result_real['values'][1][x])
+#             last_week_real = float(result_real['values'][1][x-1])
+#             percent_real = ((actual_week_real-last_week_real)/last_week_real)*100
+#           else:
+#             percent_real = 0
+#         else:
+#             percent_real = 0
 
-        #CRO Executives REAL
-        if str(result_real['values'][3][x]).isnumeric():
+#         #CRO Executives REAL
+#         if str(result_real['values'][3][x]).isnumeric():
           
-          if str(result_real['values'][3][x-1]).isnumeric():
-            actual_week_real_executives = float(result_real['values'][3][x])
-            last_week_real_executives = float(result_real['values'][3][x-1])
-            percent_real_executives = ((actual_week_real_executives-last_week_real_executives)/last_week_real_executives)*100
-          else:
-            percent_real_executives = 0
-        else:
-            percent_real_executives = 0
+#           if str(result_real['values'][3][x-1]).isnumeric():
+#             actual_week_real_executives = float(result_real['values'][3][x])
+#             last_week_real_executives = float(result_real['values'][3][x-1])
+#             percent_real_executives = ((actual_week_real_executives-last_week_real_executives)/last_week_real_executives)*100
+#           else:
+#             percent_real_executives = 0
+#         else:
+#             percent_real_executives = 0
         
 
-        #CRO OM REAL
-        if str(result_real['values'][4][x]).isnumeric():
+#         #CRO OM REAL
+#         if str(result_real['values'][4][x]).isnumeric():
           
-          if str(result_real['values'][4][x-1]).isnumeric():
-            actual_week_real_om = float(result_real['values'][4][x])
-            last_week_real_om = float(result_real['values'][4][x-1])
-            percent_real_om = ((actual_week_real_om-last_week_real_om)/last_week_real_om)*100
-          else: 
-            percent_real_om = 0
-        else: 
-            percent_real_om = 0
+#           if str(result_real['values'][4][x-1]).isnumeric():
+#             actual_week_real_om = float(result_real['values'][4][x])
+#             last_week_real_om = float(result_real['values'][4][x-1])
+#             percent_real_om = ((actual_week_real_om-last_week_real_om)/last_week_real_om)*100
+#           else: 
+#             percent_real_om = 0
+#         else: 
+#             percent_real_om = 0
 
-        #CRO Consultants REAL
-        if str(result_real['values'][2][x]):
+#         #CRO Consultants REAL
+#         if str(result_real['values'][2][x]):
           
-          if str(result_real['values'][2][x-1]).isnumeric():
-            actual_week_real_cons = float(result_real['values'][2][x])
-            last_week_real_cons = float(result_real['values'][2][x-1])
-            percent_real_cons = ((actual_week_real_cons-last_week_real_cons)/last_week_real_cons)*100
-          else:
-            percent_real_cons = 0
-        else:
-            percent_real_cons = 0
+#           if str(result_real['values'][2][x-1]).isnumeric():
+#             actual_week_real_cons = float(result_real['values'][2][x])
+#             last_week_real_cons = float(result_real['values'][2][x-1])
+#             percent_real_cons = ((actual_week_real_cons-last_week_real_cons)/last_week_real_cons)*100
+#           else:
+#             percent_real_cons = 0
+#         else:
+#             percent_real_cons = 0
 
-        #CRO RaF REAL
-        if str(result_real['values'][5][x]).isnumeric():
+#         #CRO RaF REAL
+#         if str(result_real['values'][5][x]).isnumeric():
           
-          if str(result_real['values'][5][x-1]).isnumeric():
-            actual_week_real_raf = float(result_real['values'][5][x])
-            last_week_real_raf = float(result_real['values'][5][x-1])
-            percent_real_raf = ((actual_week_real_raf-last_week_real_raf)/last_week_real_raf)*100
-          else:
-            percent_real_raf = 0 
-        else:
-            percent_real_raf = 0 
+#           if str(result_real['values'][5][x-1]).isnumeric():
+#             actual_week_real_raf = float(result_real['values'][5][x])
+#             last_week_real_raf = float(result_real['values'][5][x-1])
+#             percent_real_raf = ((actual_week_real_raf-last_week_real_raf)/last_week_real_raf)*100
+#           else:
+#             percent_real_raf = 0 
+#         else:
+#             percent_real_raf = 0 
 
-        #CRO Integradores REAL
-        if str(result_real['values'][8][x]).isnumeric():
+#         #CRO Integradores REAL
+#         if str(result_real['values'][8][x]).isnumeric():
           
-          if str(result_real['values'][8][x-1]).isnumeric():
-            actual_week_real_integra = float(result_real['values'][8][x])
-            last_week_real_integra = float(result_real['values'][8][x-1])
-            percent_real_integra = ((actual_week_real_integra-last_week_real_integra)/last_week_real_integra)*100
-          else:
-            percent_real_integra = 0
-        else:
-            percent_real_integra = 0
+#           if str(result_real['values'][8][x-1]).isnumeric():
+#             actual_week_real_integra = float(result_real['values'][8][x])
+#             last_week_real_integra = float(result_real['values'][8][x-1])
+#             percent_real_integra = ((actual_week_real_integra-last_week_real_integra)/last_week_real_integra)*100
+#           else:
+#             percent_real_integra = 0
+#         else:
+#             percent_real_integra = 0
 
-        #CRO Second Hand REAL
-        if str(result_real['values'][7][x]).isnumeric():
+#         #CRO Second Hand REAL
+#         if str(result_real['values'][7][x]).isnumeric():
           
-          if str(result_real['values'][7][x-1]).isnumeric():
-            actual_week_real_second = float(result_real['values'][7][x])
-            last_week_real_second = float(result_real['values'][7][x-1])
-            percent_real_second = ((actual_week_real_second-last_week_real_second)/last_week_real_second)*100
-          else:
-            percent_real_second = 0 
-        else:
-            percent_real_second = 0
+#           if str(result_real['values'][7][x-1]).isnumeric():
+#             actual_week_real_second = float(result_real['values'][7][x])
+#             last_week_real_second = float(result_real['values'][7][x-1])
+#             percent_real_second = ((actual_week_real_second-last_week_real_second)/last_week_real_second)*100
+#           else:
+#             percent_real_second = 0 
+#         else:
+#             percent_real_second = 0
 
-        #CRO Others REAL
-        if str(result_real['values'][6][x]).isnumeric():
+#         #CRO Others REAL
+#         if str(result_real['values'][6][x]).isnumeric():
           
-          if str(result_real['values'][6][x-1]).isnumeric():
-            actual_week_real_others = float(result_real['values'][6][x])
-            last_week_real_others = float(result_real['values'][6][x-1])
-            percent_real_others = ((actual_week_real_others-last_week_real_others)/last_week_real_others)*100
-          else:
-            percent_real_others = 0 
-        else:
-            percent_real_others = 0 
+#           if str(result_real['values'][6][x-1]).isnumeric():
+#             actual_week_real_others = float(result_real['values'][6][x])
+#             last_week_real_others = float(result_real['values'][6][x-1])
+#             percent_real_others = ((actual_week_real_others-last_week_real_others)/last_week_real_others)*100
+#           else:
+#             percent_real_others = 0 
+#         else:
+#             percent_real_others = 0 
 
-        input_result_2 = [[str(round(percent_real_executives, 1))+"%"], [str(round(percent_real_om, 1))+"%"], [str(round(percent_real_cons,1))+"%"], [str(round(percent_real_raf,1))+"%"], [str(round(percent_real_second,1))+"%"], [str(round(percent_real_integra,1))+"%"], [str(round(percent_real_others,1))+"%"], [str(round(percent_real,1))+"%"]]
+#         input_result_2 = [[str(round(percent_real_executives, 1))+"%"], [str(round(percent_real_om, 1))+"%"], [str(round(percent_real_cons,1))+"%"], [str(round(percent_real_raf,1))+"%"], [str(round(percent_real_second,1))+"%"], [str(round(percent_real_integra,1))+"%"], [str(round(percent_real_others,1))+"%"], [str(round(percent_real,1))+"%"]]
 
-        sheet.values().update(
-          spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-          range='Análise Overall!C4', 
-          valueInputOption="USER_ENTERED",
-          body={'majorDimension': 'ROWS','values': input_result_2}
-        ).execute()
+#         sheet.values().update(
+#           spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#           range='Análise Overall!C4', 
+#           valueInputOption="USER_ENTERED",
+#           body={'majorDimension': 'ROWS','values': input_result_2}
+#         ).execute()
 
-        print(input_result_2)
-        x += 1
-      else:
-        x += 1
-  except IndexError:
-      print("Data inválida")
-fluctuation_cro_real_method()
+#         print(input_result_2)
+#         x += 1
+#       else:
+#         x += 1
+#   except IndexError:
+#       print("Data inválida")
+# fluctuation_cro_real_method()
 
 #Função que calcula a variação do TPV ADD do caa
 def fluctuation_tpv_caa_method():
@@ -586,7 +618,7 @@ def fluctuation_tpv_okr_method():
   result = (
     sheet.values()
     .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-    range='forecast_caa!A29:DA36',
+    range='forecast_okr!A29:DA36',
     majorDimension='ROWS')
     .execute()
   )
@@ -643,153 +675,635 @@ def fluctuation_tpv_okr_method():
           i += 1 
 fluctuation_tpv_okr_method()
 
-#Função que calcula a performance de CRO WoW
-def performance_cro_method():
-  result = (
-    sheet.values()
-    .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-        range='CRO!A4:DA12',
-        majorDimension='ROWS')
-    .execute()
-  )
+# #Função que calcula a performance de CRO WoW
+# def performance_cro_method():
+#   result = (
+#     sheet.values()
+#     .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#         range='CRO!A4:DA12',
+#         majorDimension='ROWS')
+#     .execute()
+#   )
 
-  i = 0
-  try:
-    while i < len(result['values'][0]):
-      if result['values'][0][i] == search_caa:
+#   i = 0
+#   try:
+#     while i < len(result['values'][0]):
+#       if result['values'][0][i] == search_caa:
 
-        #CRO WoW 
-        if str(result['values'][1][i]).isnumeric():
-          actual_week_cro = float(result['values'][1][i])
-          if str(result['values'][1][i-1]).isnumeric():
-            last_week_cro = float(result['values'][1][i-1])
-            percent_wow_cro = ((actual_week_cro - last_week_cro)/last_week_cro)*100
-          else:
-            last_week_cro = 0
-            percent_wow_cro = 0
-        else:
-          actual_week_cro = 0
-          last_week_cro = 0
-          percent_wow_cro = 0
+#         #CRO WoW 
+#         if str(result['values'][1][i]).isnumeric():
+#           actual_week_cro = float(result['values'][1][i])
+#           if str(result['values'][1][i-1]).isnumeric():
+#             last_week_cro = float(result['values'][1][i-1])
+#             percent_wow_cro = ((actual_week_cro - last_week_cro)/last_week_cro)*100
+#           else:
+#             last_week_cro = 0
+#             percent_wow_cro = 0
+#         else:
+#           actual_week_cro = 0
+#           last_week_cro = 0
+#           percent_wow_cro = 0
 
-        #CRO WoW Executives
-        if str(result['values'][3][i]).isnumeric():
-          actual_week_cro_executives = float(result['values'][3][i])
-          if str(result['values'][3][i-1]).isnumeric():
-            last_week_cro_executives = float(result['values'][3][i-1])
-            percent_wow_cro_executives = ((actual_week_cro_executives - last_week_cro_executives)/last_week_cro_executives)*100
-          else:
-            last_week_cro_executives = 0
-            percent_wow_cro_executives = 0
-        else:
-          actual_week_cro_executives = 0
-          last_week_cro_executives = 0
-          percent_wow_cro_executives = 0
+#         #CRO WoW Executives
+#         if str(result['values'][3][i]).isnumeric():
+#           actual_week_cro_executives = float(result['values'][3][i])
+#           if str(result['values'][3][i-1]).isnumeric():
+#             last_week_cro_executives = float(result['values'][3][i-1])
+#             percent_wow_cro_executives = ((actual_week_cro_executives - last_week_cro_executives)/last_week_cro_executives)*100
+#           else:
+#             last_week_cro_executives = 0
+#             percent_wow_cro_executives = 0
+#         else:
+#           actual_week_cro_executives = 0
+#           last_week_cro_executives = 0
+#           percent_wow_cro_executives = 0
 
-        #CRO WoW OM
-        if str(result['values'][4][i]).isnumeric():
-          actual_week_cro_om = float(result['values'][4][i])
-          if str(result['values'][4][i-1]).isnumeric():
-            last_week_cro_om = float(result['values'][4][i-1])
-            percent_wow_cro_om = ((actual_week_cro_om - last_week_cro_om)/last_week_cro_om)*100
-          else:
-            last_week_cro_om = 0
-            percent_wow_cro_om = 0
-        else:
-          actual_week_cro_om = 0
-          last_week_cro_om = 0
-          percent_wow_cro_om = 0
+#         #CRO WoW OM
+#         if str(result['values'][4][i]).isnumeric():
+#           actual_week_cro_om = float(result['values'][4][i])
+#           if str(result['values'][4][i-1]).isnumeric():
+#             last_week_cro_om = float(result['values'][4][i-1])
+#             percent_wow_cro_om = ((actual_week_cro_om - last_week_cro_om)/last_week_cro_om)*100
+#           else:
+#             last_week_cro_om = 0
+#             percent_wow_cro_om = 0
+#         else:
+#           actual_week_cro_om = 0
+#           last_week_cro_om = 0
+#           percent_wow_cro_om = 0
 
-        #CRO WoW Consultants
-        if str(result['values'][2][i]).isnumeric():
-          actual_week_cro_consultants = float(result['values'][2][i])
-          if str(result['values'][2][i-1]).isnumeric():
-            last_week_cro_consultants = float(result['values'][2][i-1])
-            percent_wow_cro_consultants = ((actual_week_cro_consultants - last_week_cro_consultants)/last_week_cro_consultants)*100
-          else:
-            last_week_cro_consultants = 0 
-            percent_wow_cro_consultants = 0
-        else:
-          actual_week_cro_consultants = 0 
-          last_week_cro_consultants = 0 
-          percent_wow_cro_consultants = 0
+#         #CRO WoW Consultants
+#         if str(result['values'][2][i]).isnumeric():
+#           actual_week_cro_consultants = float(result['values'][2][i])
+#           if str(result['values'][2][i-1]).isnumeric():
+#             last_week_cro_consultants = float(result['values'][2][i-1])
+#             percent_wow_cro_consultants = ((actual_week_cro_consultants - last_week_cro_consultants)/last_week_cro_consultants)*100
+#           else:
+#             last_week_cro_consultants = 0 
+#             percent_wow_cro_consultants = 0
+#         else:
+#           actual_week_cro_consultants = 0 
+#           last_week_cro_consultants = 0 
+#           percent_wow_cro_consultants = 0
 
-        #CRO WoW RaF
-        if str(result['values'][5][i]).isnumeric():
-          actual_week_cro_raf = float(result['values'][5][i])
-          if str(result['values'][5][i-1]).isnumeric():
-            last_week_cro_raf = float(result['values'][5][i-1])
-            percent_wow_cro_raf = ((actual_week_cro_raf - last_week_cro_raf)/last_week_cro_raf)*100
-          else:
-            last_week_cro_raf = 0
-            percent_wow_cro_raf = 0
-        else:
-          actual_week_cro_raf = 0
-          last_week_cro_raf = 0
-          percent_wow_cro_raf = 0
+#         #CRO WoW RaF
+#         if str(result['values'][5][i]).isnumeric():
+#           actual_week_cro_raf = float(result['values'][5][i])
+#           if str(result['values'][5][i-1]).isnumeric():
+#             last_week_cro_raf = float(result['values'][5][i-1])
+#             percent_wow_cro_raf = ((actual_week_cro_raf - last_week_cro_raf)/last_week_cro_raf)*100
+#           else:
+#             last_week_cro_raf = 0
+#             percent_wow_cro_raf = 0
+#         else:
+#           actual_week_cro_raf = 0
+#           last_week_cro_raf = 0
+#           percent_wow_cro_raf = 0
 
-        #CRO WoW Second Hand
-        if str(result['values'][7][i]).isnumeric():
-          actual_week_cro_second = float(result['values'][7][i])
-          if str(result['values'][7][i-1]).isnumeric():
-            last_week_cro_second = float(result['values'][7][i-1])
-            percent_wow_cro_second = ((actual_week_cro_second - last_week_cro_second)/last_week_cro_second)*100
-          else:
-            last_week_cro_second = 0
-            percent_wow_cro_second = 0
-        else:
-          actual_week_cro_second = 0
-          last_week_cro_second = 0
-          percent_wow_cro_second = 0
+#         #CRO WoW Second Hand
+#         if str(result['values'][7][i]).isnumeric():
+#           actual_week_cro_second = float(result['values'][7][i])
+#           if str(result['values'][7][i-1]).isnumeric():
+#             last_week_cro_second = float(result['values'][7][i-1])
+#             percent_wow_cro_second = ((actual_week_cro_second - last_week_cro_second)/last_week_cro_second)*100
+#           else:
+#             last_week_cro_second = 0
+#             percent_wow_cro_second = 0
+#         else:
+#           actual_week_cro_second = 0
+#           last_week_cro_second = 0
+#           percent_wow_cro_second = 0
 
-        #CRO WoW Integradores
-        if str(result['values'][8][i]).isnumeric():
-          actual_week_cro_integra = float(result['values'][8][i])
-          if str(result['values'][8][i-1]).isnumeric():
-            last_week_cro_integra = float(result['values'][8][i-1])
-            percent_wow_cro_integra = ((actual_week_cro_integra - last_week_cro_integra)/last_week_cro_integra)*100
-          else:
-            last_week_cro_integra = 0
-            percent_wow_cro_integra = 0
-        else:
-          actual_week_cro_integra = 0 
-          last_week_cro_integra = 0
-          percent_wow_cro_integra = 0   
+#         #CRO WoW Integradores
+#         if str(result['values'][8][i]).isnumeric():
+#           actual_week_cro_integra = float(result['values'][8][i])
+#           if str(result['values'][8][i-1]).isnumeric():
+#             last_week_cro_integra = float(result['values'][8][i-1])
+#             percent_wow_cro_integra = ((actual_week_cro_integra - last_week_cro_integra)/last_week_cro_integra)*100
+#           else:
+#             last_week_cro_integra = 0
+#             percent_wow_cro_integra = 0
+#         else:
+#           actual_week_cro_integra = 0 
+#           last_week_cro_integra = 0
+#           percent_wow_cro_integra = 0   
 
-        #CRO WoW Others
-        if str(result['values'][6][i]).isnumeric():
-          actual_week_cro_others = float(result['values'][6][i])
-          if str(result['values'][6][i-1]).isnumeric():
-            last_week_cro_others = float(result['values'][6][i-1])
-            percent_wow_cro_others = ((actual_week_cro_others - last_week_cro_others)/last_week_cro_others)*100
-          else:
-            last_week_cro_others = 0
-            percent_wow_cro_others = 0
-        else:
-          actual_week_cro_others = 0 
-          last_week_cro_others = 0
-          percent_wow_cro_others = 0
+#         #CRO WoW Others
+#         if str(result['values'][6][i]).isnumeric():
+#           actual_week_cro_others = float(result['values'][6][i])
+#           if str(result['values'][6][i-1]).isnumeric():
+#             last_week_cro_others = float(result['values'][6][i-1])
+#             percent_wow_cro_others = ((actual_week_cro_others - last_week_cro_others)/last_week_cro_others)*100
+#           else:
+#             last_week_cro_others = 0
+#             percent_wow_cro_others = 0
+#         else:
+#           actual_week_cro_others = 0 
+#           last_week_cro_others = 0
+#           percent_wow_cro_others = 0
 
-        input_result = [[last_week_cro_executives,actual_week_cro_executives,str(round(percent_wow_cro_executives,1))+"%"],
-                        [last_week_cro_om,actual_week_cro_om,str(round(percent_wow_cro_om,1))+"%"],
-                        [last_week_cro_consultants,actual_week_cro_consultants,str(round(percent_wow_cro_consultants,1))+"%"],
-                        [last_week_cro_raf,actual_week_cro_raf,str(round(percent_wow_cro_raf,1))+"%"],
-                        [last_week_cro_second,actual_week_cro_second,str(round(percent_wow_cro_second,1))+"%"],
-                        [last_week_cro_integra,actual_week_cro_integra,str(round(percent_wow_cro_integra,1))+"%"],
-                        [last_week_cro_others,actual_week_cro_others,str(round(percent_wow_cro_others,1))+"%"],
-                        [last_week_cro,actual_week_cro,str(round(percent_wow_cro,1))+"%"]]
+#         input_result = [[last_week_cro_executives,actual_week_cro_executives,str(round(percent_wow_cro_executives,1))+"%"],
+#                         [last_week_cro_om,actual_week_cro_om,str(round(percent_wow_cro_om,1))+"%"],
+#                         [last_week_cro_consultants,actual_week_cro_consultants,str(round(percent_wow_cro_consultants,1))+"%"],
+#                         [last_week_cro_raf,actual_week_cro_raf,str(round(percent_wow_cro_raf,1))+"%"],
+#                         [last_week_cro_second,actual_week_cro_second,str(round(percent_wow_cro_second,1))+"%"],
+#                         [last_week_cro_integra,actual_week_cro_integra,str(round(percent_wow_cro_integra,1))+"%"],
+#                         [last_week_cro_others,actual_week_cro_others,str(round(percent_wow_cro_others,1))+"%"],
+#                         [last_week_cro,actual_week_cro,str(round(percent_wow_cro,1))+"%"]]
 
 
-        sheet.values().update(
-              spreadsheetId=SAMPLE_SPREADSHEET_ID, 
-              range='Análise Overall!B17', 
-              valueInputOption="USER_ENTERED",
-              body={'majorDimension': 'ROWS','values': input_result}
-            ).execute()
+#         sheet.values().update(
+#               spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#               range='Análise Overall!B17', 
+#               valueInputOption="USER_ENTERED",
+#               body={'majorDimension': 'ROWS','values': input_result}
+#             ).execute()
 
-        i += 1
-      else:
-        i += 1
-  except IndexError:
-    print('data inválida')
-performance_cro_method()
+#         i += 1
+#       else:
+#         i += 1
+#   except IndexError:
+#     print('data inválida')
+# performance_cro_method()
+
+# #Função que calcula a performance de TPV ADD WoW
+# def performance_tpv_method():
+#   result = (
+#     sheet.values()
+#     .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#         range='TPV ADD!A3:DA12',
+#         majorDimension='ROWS')
+#     .execute()
+#   )
+
+#   i = 0
+#   try:
+#     while i < len(result['values'][0]):
+#       if result['values'][0][i] == search_caa:
+#         #TPV ADD WoW 
+#         if str(result['values'][2][i]).isnumeric():
+#           actual_week_tpv = float(result['values'][2][i])
+#           if str(result['values'][2][i-1]).isnumeric():
+#             last_week_tpv = float(result['values'][2][i-1])
+#             percent_wow_tpv = ((actual_week_tpv - last_week_tpv)/last_week_tpv)*100
+#           else:
+#             last_week_tpv = 0
+#             percent_wow_tpv = 0
+#         else:
+#           actual_week_tpv = 0
+#           last_week_tpv = 0
+#           percent_wow_tpv = 0
+      
+#         #TPV ADD WoW Executives
+#         if str(result['values'][4][i]).isnumeric():
+#           actual_week_tpv_executives = float(result['values'][4][i])
+#           if str(result['values'][4][i-1]).isnumeric():
+#             last_week_tpv_executives = float(result['values'][4][i-1])
+#             percent_wow_tpv_executives = ((actual_week_tpv_executives - last_week_tpv_executives)/last_week_tpv_executives)*100
+#           else:
+#             last_week_tpv_executives = 0
+#             percent_wow_tpv_executives = 0
+#         else:
+#           actual_week_tpv_executives = 0 
+#           last_week_tpv_executives = 0 
+#           percent_wow_tpv_executives = 0
+
+#         #CRO WoW OM
+#         if str(result['values'][5][i]).isnumeric():
+#           actual_week_tpv_om = float(result['values'][5][i])
+#           if str(result['values'][5][i-1]).isnumeric():
+#             last_week_tpv_om = float(result['values'][5][i-1])
+#             percent_wow_tpv_om = ((actual_week_tpv_om - last_week_tpv_om)/last_week_tpv_om)*100
+#           else:
+#             last_week_tpv_om = 0
+#             percent_wow_tpv_om = 0
+#         else:
+#           actual_week_tpv_om = 0
+#           last_week_tpv_om = 0
+#           percent_wow_tpv_om = 0
+
+#         #CRO WoW Consultants
+#         if str(result['values'][3][i]).isnumeric():
+#           actual_week_tpv_consultants = float(result['values'][3][i])
+#           if str(result['values'][3][i-1]).isnumeric():
+#             last_week_tpv_consultants = float(result['values'][3][i-1])
+#             percent_wow_tpv_consultants = ((actual_week_tpv_consultants - last_week_tpv_consultants)/last_week_tpv_consultants)*100
+#           else:
+#             last_week_tpv_consultants = 0 
+#             percent_wow_tpv_consultants = 0
+#         else:
+#           actual_week_tpv_consultants = 0
+#           last_week_tpv_consultants = 0 
+#           percent_wow_tpv_consultants = 0
+
+#         #CRO WoW RaF
+#         if str(result['values'][6][i]).isnumeric():
+#           actual_week_tpv_raf = float(result['values'][6][i])
+#           if str(result['values'][6][i-1]).isnumeric():
+#             last_week_tpv_raf = float(result['values'][6][i-1])
+#             percent_wow_tpv_raf = ((actual_week_tpv_raf - last_week_tpv_raf)/last_week_tpv_raf)*100
+#           else:
+#             last_week_tpv_raf = 0
+#             percent_wow_tpv_raf = 0
+#         else:
+#           actual_week_tpv_raf = 0 
+#           last_week_tpv_raf = 0 
+#           percent_wow_tpv_raf = 0  
+
+#         #CRO WoW Second Hand
+#         if str(result['values'][8][i]).isnumeric():
+#           actual_week_tpv_second = float(result['values'][8][i])
+#           if str(result['values'][8][i-1]).isnumeric():
+#             last_week_tpv_second = float(result['values'][8][i-1])
+#             percent_wow_tpv_second = ((actual_week_tpv_second - last_week_tpv_second)/last_week_tpv_second)*100
+#           else:
+#             last_week_tpv_second = 0
+#             percent_wow_tpv_second = 0 
+#         else:
+#           actual_week_tpv_second = 0
+#           last_week_tpv_second = 0
+#           percent_wow_tpv_second = 0 
+
+#         #CRO WoW Integradores
+#         if str(result['values'][9][i]).isnumeric():
+#           actual_week_tpv_integra = float(result['values'][9][i])
+#           if str(result['values'][9][i-1]).isnumeric():
+#             last_week_tpv_integra = float(result['values'][9][i-1])
+#             percent_week_tpv_integra = ((actual_week_tpv_integra - last_week_tpv_integra)/last_week_tpv_integra)*100
+#           else:
+#             last_week_tpv_integra = 0
+#             percent_wow_tpv_second = 0
+#         else:
+#           actual_week_tpv_integra = 0
+#           last_week_tpv_integra = 0
+#           percent_wow_tpv_second = 0
+
+
+#         #CRO WoW Others
+#         if str(result['values'][7][i]).isnumeric():
+#           actual_week_tpv_others = float(result['values'][7][i])
+#           if str(result['values'][7][i-1]).isnumeric():
+#             last_week_tpv_others = float(result['values'][7][i-1])
+#             percent_wow_tpv_others = ((actual_week_tpv_others - last_week_tpv_others)/last_week_tpv_others)*100
+#           else:
+#             last_week_tpv_others = 0
+#             percent_wow_tpv_others = 0
+#         else:
+#           actual_week_tpv_others = 0 
+#           last_week_tpv_others = 0
+#           percent_wow_tpv_others = 0
+
+
+#         input_result = [[last_week_tpv_executives, actual_week_tpv_executives, str(round(percent_wow_tpv_executives,1))+"%"],
+#                         [last_week_tpv_om, actual_week_tpv_om, str(round(percent_wow_tpv_om,1))+"%"],
+#                         [last_week_tpv_consultants, actual_week_tpv_consultants, str(round(percent_wow_tpv_consultants,1))+"%"],
+#                         [last_week_tpv_raf, actual_week_tpv_raf, str(round(percent_wow_tpv_raf,1))+"%"],
+#                         [last_week_tpv_second, actual_week_tpv_second, str(round(percent_wow_tpv_second,1))+"%"], 
+#                         [last_week_tpv_integra, actual_week_tpv_integra, str(round(percent_week_tpv_integra,1))+"%"],    
+#                         [last_week_tpv_others, actual_week_tpv_others, str(round(percent_wow_tpv_others,1))+"%"],  
+#                         [last_week_tpv,actual_week_tpv, str(round(percent_wow_tpv,1))+"%"]]
+
+#         sheet.values().update(
+#               spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#               range='Análise Overall!G17', 
+#               valueInputOption="USER_ENTERED",
+#               body={'majorDimension': 'ROWS','values': input_result}
+#             ).execute()
+
+#         i += 1
+#       else:
+#         i += 1
+#   except IndexError:
+#     print('data inválida')
+# performance_tpv_method()
+
+# #Função que calcula CRO channel vs caa
+# def channel_vs_caa_cro_method():
+#   result_caa = (
+#           sheet.values()
+#           .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#               range='forecast_caa!A12:DA20',
+#               majorDimension='ROWS')
+#           .execute()
+#       )
+#   result_real = (
+#           sheet.values()
+#           .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#               range='CRO!A4:DA12',
+#               majorDimension='ROWS')
+#           .execute()
+#       )
+
+#   #Inputa os dados do CAA
+#   i = 0
+#   while i < len(result_caa['values'][0]):
+#       if result_caa['values'][0][i] == search_caa:
+#         #CRO CAA
+#         actual_week_caa = float(result_caa['values'][1][i])
+
+#         #CRO Executives CAA
+#         actual_week_caa_executives = float(result_caa['values'][2][i])
+
+#         #CRO OM CAA
+#         actual_week_caa_om = float(result_caa['values'][3][i])
+
+#         #CRO Consultants CAA
+#         actual_week_caa_consultants = float(result_caa['values'][4][i])
+
+#         #CRO RaF CAA
+#         actual_week_caa_raf = float(result_caa['values'][5][i])
+
+#         #CRO Integradores CAA
+#         actual_week_caa_integra = float(result_caa['values'][6][i])
+
+#         #CRO Second hand CAA
+#         actual_week_caa_second = float(result_caa['values'][7][i])
+
+#         input_result = [[actual_week_caa_executives],[actual_week_caa_om],[actual_week_caa_consultants],[actual_week_caa_raf],[actual_week_caa_second],[actual_week_caa_integra],["-"],[actual_week_caa]]
+
+#         sheet.values().update(
+#           spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#           range='Análise Overall!B30', 
+#           valueInputOption="USER_ENTERED",
+#           body={'majorDimension': 'ROWS','values': input_result}
+#         ).execute()
+#         i += 1
+#       else:
+#         i += 1
+
+#   #Inputa os dados do CRO real da semana 
+#   x=0
+#   try:
+#     while x < len(result_real['values'][0]):
+#       if result_real['values'][0][x] == search_caa:
+#         #CRO REAL
+#         if str(result_real['values'][1][x]).isnumeric():
+#           actual_week_real = float(result_real['values'][1][x])
+#         else:
+#           actual_week_real = 0
+
+#         #CRO Executives REAL
+#         if str(result_real['values'][3][x]).isnumeric():
+#           actual_week_real_executives = float(result_real['values'][3][x])
+#         else:
+#           actual_week_real_executives = 0
+        
+
+#         #CRO OM REAL
+#         if str(result_real['values'][4][x]).isnumeric():
+#           actual_week_real_om = float(result_real['values'][4][x])
+#         else: 
+#           actual_week_real_om = 0
+
+#         #CRO Consultants REAL
+#         if str(result_real['values'][2][x]):
+#           actual_week_real_cons = float(result_real['values'][2][x])
+#         else:
+#           actual_week_real_cons = 0
+
+#         #CRO RaF REAL
+#         if str(result_real['values'][5][x]).isnumeric():
+#           actual_week_real_raf = float(result_real['values'][5][x]) 
+#         else:
+#           actual_week_real_raf = 0 
+
+#         #CRO Integradores REAL
+#         if str(result_real['values'][8][x]).isnumeric():
+#           actual_week_real_integra = float(result_real['values'][8][x])
+#         else:
+#           actual_week_real_integra = 0
+
+#         #CRO Second Hand REAL
+#         if str(result_real['values'][7][x]).isnumeric():
+#           actual_week_real_second = float(result_real['values'][7][x])
+#         else:
+#           actual_week_real_second = 0
+
+#         #CRO Others REAL
+#         if str(result_real['values'][6][x]).isnumeric():
+#           actual_week_real_others = float(result_real['values'][6][x])
+#         else:
+#           actual_week_real_others = 0 
+
+#         input_result_2 = [[actual_week_real_executives], 
+#                           [actual_week_real_om], 
+#                           [actual_week_real_cons], 
+#                           [actual_week_real_raf], 
+#                           [actual_week_real_second], 
+#                           [actual_week_real_integra], 
+#                           [actual_week_real_others], 
+#                           [actual_week_real]
+#                         ]
+
+#         sheet.values().update(
+#           spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#           range='Análise Overall!C30', 
+#           valueInputOption="USER_ENTERED",
+#           body={'majorDimension': 'ROWS','values': input_result_2}
+#         ).execute()
+
+#         print(input_result_2)
+#         x += 1
+#       else:
+#         x += 1
+#   except IndexError:
+#       print("Data inválida")
+
+#   #Calcula e inputa a variação de channel vs caa
+#   percent_channel_caa = ((actual_week_real - actual_week_caa)/actual_week_caa)*100
+#   percent_channel_caa_executives = ((actual_week_real_executives - actual_week_caa_executives)/actual_week_caa_executives)*100
+#   percent_channel_caa_om = ((actual_week_real_om - actual_week_caa_om)/actual_week_caa_om)*100
+#   percent_channel_caa_consultants = ((actual_week_real_cons - actual_week_caa_consultants)/actual_week_caa_consultants)*100
+#   percent_channel_caa_raf = ((actual_week_real_raf - actual_week_caa_raf)/actual_week_caa_raf)*100
+#   percent_channel_caa_second = ((actual_week_real_second - actual_week_caa_second)/actual_week_caa_second)*100
+#   percent_channel_caa_integra = ((actual_week_real_integra - actual_week_caa_integra)/actual_week_caa_integra)*100
+
+#   input_percents = [[str(round(percent_channel_caa_executives,1))+"%"],
+#                     [str(round(percent_channel_caa_om,1))+"%"],
+#                     [str(round(percent_channel_caa_consultants,1))+"%"],
+#                     [str(round(percent_channel_caa_raf,1))+"%"], 
+#                     [str(round(percent_channel_caa_second,1))+"%"], 
+#                     [str(round(percent_channel_caa_integra,1))+"%"], 
+#                     ["-"], 
+#                     [str(round(percent_channel_caa,1))+"%"]]
+
+
+#   sheet.values().update(
+#           spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#           range='Análise Overall!D30', 
+#           valueInputOption="USER_ENTERED",
+#           body={'majorDimension': 'ROWS','values': input_percents}
+#         ).execute()
+# channel_vs_caa_cro_method()
+
+# #Função que calcula TPV ADD channel vs caa
+# def channel_vs_caa_tpv_method():
+#   #Inputa os dados de TPV do CAA
+#   result_caa = (
+#     sheet.values()
+#     .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#         range='forecast_caa!A29:DA36',
+#         majorDimension='ROWS')
+#     .execute()
+#   )
+#   print('teste1')
+
+#   i = 0
+#   while i < len(result_caa['values'][0]):
+#     if result_caa['values'][0][i] == search_caa:
+#       #TPV CAA
+#       actual_week_caa = float(result_caa['values'][1][i])
+
+#       #TPV Executives CAA
+#       actual_week_caa_executives = float(result_caa['values'][2][i])
+
+#       #TPV OM CAA
+#       actual_week_caa_om = float(result_caa['values'][3][i])
+
+#       #TPV Consultants CAA
+#       actual_week_caa_consultants = float(result_caa['values'][4][i])
+
+#       #TPV RaF CAA
+#       actual_week_caa_raf = float(result_caa['values'][5][i])
+
+#       #TPV Integradores CAA
+#       actual_week_caa_integra = float(result_caa['values'][6][i])
+
+#       #TPV Second Hand CAA
+#       actual_week_caa_second = float(result_caa['values'][7][i])
+
+#       input_caa = [[actual_week_caa_executives],
+#                       [actual_week_caa_om],
+#                       [actual_week_caa_consultants],
+#                       [actual_week_caa_raf],
+#                       [actual_week_caa_second],
+#                       [actual_week_caa_integra],
+#                       ["-"],
+#                       [actual_week_caa]
+#       ]
+
+#       sheet.values().update(
+#             spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#             range='Análise Overall!G30', 
+#             valueInputOption="USER_ENTERED",
+#             body={'majorDimension': 'ROWS','values': input_caa}
+#       ).execute()
+
+#       i += 1
+#     else:
+#       i += 1
+
+#   #Inputado os dados reais de TPV 
+#   result_real = (
+#           sheet.values()
+#           .get(spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#               range='TPV ADD!A3:DA12',
+#               majorDimension='ROWS')
+#           .execute()
+#   )
+
+#   i = 0
+#   try:
+#     while i < len(result_real['values'][0]):
+#       if result_real['values'][0][i] == search_caa:
+#         #TPV Real
+#         if str(result_real['values'][2][i]).isnumeric():
+#           actual_week_real = float(result_real['values'][2][i])
+#         else:
+#           actual_week_real = 0
+          
+#         #TPV Executives Real
+#         if str(result_real['values'][4][i]).isnumeric():
+#           actual_week_real_executives = float(result_real['values'][4][i])
+#         else:
+#           actual_week_real_executives = 0
+
+#         #TPV OM Real
+#         if str(result_real['values'][5][i]).isnumeric():
+#           actual_week_real_om = float(result_real['values'][5][i])
+#         else:
+#           actual_week_real_om = 0
+
+#         #TPV Consultants Real
+#         if str(result_real['values'][3][i]).isnumeric():
+#           actual_week_real_consultants = float(result_real['values'][3][i])
+#         else: 
+#           actual_week_real_consultants = 0
+
+#         #TPV RaF Real
+#         if str(result_real['values'][6][i]).isnumeric():
+#           actual_week_real_raf = float(result_real['values'][6][i])
+#         else:
+#           actual_week_real_raf = 0 
+
+#         #TPV Second Hand Real
+#         if str(result_real['values'][8][i]).isnumeric():
+#           actual_week_real_second = float(result_real['values'][8][i])
+#         else:
+#           actual_week_real_second = 0
+
+#         #TPV Integradores Real
+#         if str(result_real['values'][9][i]).isnumeric():
+#           actual_week_real_integra = float(result_real['values'][9][i])
+#         else:
+#           actual_week_real_integra = 0
+
+#         #TPV Others Real
+#         if str(result_real['values'][7][i]).isnumeric():
+#           actual_week_real_others = float(result_real['values'][7][i])
+#         else:
+#           actual_week_real_others = 0
+
+#         input_real = [[actual_week_real_executives],
+#                         [actual_week_real_om],
+#                         [actual_week_real_consultants],
+#                         [actual_week_real_raf],
+#                         [actual_week_real_second],
+#                         [actual_week_real_integra],
+#                         [actual_week_real_others],
+#                         [actual_week_real]]
+
+#         sheet.values().update(
+#               spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#               range='Análise Overall!H30', 
+#               valueInputOption="USER_ENTERED",
+#               body={'majorDimension': 'ROWS','values': input_real}
+#         ).execute()
+#         print('deu certo')
+#         i += 1
+#       else:
+#         i += 1
+#   except IndexError:
+#     print("Data inválida")
+
+
+#   #Calcula e inputa a variação de channel vs caa
+#   percent_channel_real = ((actual_week_real - actual_week_caa)/actual_week_caa)*100
+#   percent_channel_real_executives = ((actual_week_real_executives - actual_week_caa_executives)/actual_week_caa_executives)*100
+#   percent_channel_real_om = ((actual_week_real_om - actual_week_caa_om)/actual_week_caa_om)*100
+#   percent_channel_real_consultants = ((actual_week_real_consultants - actual_week_caa_consultants)/actual_week_caa_consultants)*100
+#   percent_channel_real_raf = ((actual_week_real_raf - actual_week_caa_raf)/actual_week_caa_raf)*100
+#   percent_channel_real_second = ((actual_week_real_second - actual_week_caa_second)/actual_week_caa_second)*100
+#   percent_channel_real_integra = ((actual_week_real_integra - actual_week_caa_integra)/actual_week_caa_integra)*100
+
+#   input_percents = [[str(round(percent_channel_real_executives,1))+"%"],
+#                     [str(round(percent_channel_real_om,1))+"%"],
+#                     [str(round(percent_channel_real_consultants,1))+"%"],
+#                     [str(round(percent_channel_real_raf,1))+"%"], 
+#                     [str(round(percent_channel_real_second,1))+"%"], 
+#                     [str(round(percent_channel_real_integra,1))+"%"], 
+#                     ["-"], 
+#                     [str(round(percent_channel_real,1))+"%"]]
+
+
+#   sheet.values().update(
+#           spreadsheetId=SAMPLE_SPREADSHEET_ID, 
+#           range='Análise Overall!I30', 
+#           valueInputOption="USER_ENTERED",
+#           body={'majorDimension': 'ROWS','values': input_percents}
+#         ).execute()
+# channel_vs_caa_tpv_method()
+
+# #Função que calcula TPV ADD channel vs OKR
+# def channel_vs_okr_tpv_method():
+# channel_vs_okr_tpv_method()
